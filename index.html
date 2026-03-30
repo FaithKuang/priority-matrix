@@ -2,106 +2,214 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轻重缓急 - 个人工作台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>轻重缓急四象限 - 高效时间管理工具</title>
     <style>
+        /* ==============================
+           1. 全局样式与变量
+           ============================== */
+        :root {
+            --q1-bg: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            --q1-title: #ffcccc;
+            --q2-bg: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            --q2-title: #cce0ff;
+            --q3-bg: linear-gradient(135deg, #fffbf0 0%, #fff5e6 100%);
+            --q3-title: #ffe0b3;
+            --q4-bg: linear-gradient(135deg, #fafafa 0%, #f2f2f2 100%);
+            --q4-title: #e0e0e0;
+            --text-main: #333;
+            --text-sub: #666;
+            --shadow-card: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-card-hover: 0 8px 12px rgba(0,0,0,0.1);
+        }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: var(--text-main);
             height: 100vh;
-            box-sizing: border-box;
-        }
-        .matrix-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 20px;
-            height: 100%;
-        }
-        .quadrant {
-            border-radius: 8px;
-            padding: 15px;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
         }
+
+        /* ==============================
+           2. 顶部标题与说明
+           ============================== */
+        header {
+            text-align: center;
+            padding: 15px 10px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        h1 { margin: 0; font-size: 22px; color: #1a1a1a; }
+        .intro { margin: 5px 0 0; font-size: 13px; color: var(--text-sub); }
+
+        /* ==============================
+           3. 四象限容器 (实现响应式的核心)
+           ============================== */
+        .matrix-container {
+            flex-grow: 1;
+            padding: 15px;
+            box-sizing: border-box;
+            display: grid;
+            gap: 15px;
+            overflow: hidden; /* 防止整体滚动 */
+        }
+
+        /* PC端/横屏手机：2列 2行 */
+        @media (min-width: 600px) {
+            .matrix-container {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+        }
+
+        /* 手机竖屏：1列 4行 */
+        @media (max-width: 599px) {
+            .matrix-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+                overflow-y: auto; /* 手机竖屏允许整页上下滚动 */
+            }
+        }
+
+        /* ==============================
+           4. 象限模块样式 (渐变与圆角)
+           ============================== */
+        .quadrant {
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.03);
+            cursor: copy; /* 提示可以双击新增 */
+        }
+
         .q-title {
             text-align: center;
             font-weight: bold;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 16px;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
-        /* 象限底色与标题底色 */
-        #q1 { background-color: #fffafa; }
-        #q1 .q-title { background-color: #ffe6e6; }
-        #q2 { background-color: #f5faff; }
-        #q2 .q-title { background-color: #e6f2ff; }
-        #q3 { background-color: #fffcf5; }
-        #q3 .q-title { background-color: #fff5e6; }
-        #q4 { background-color: #fafafa; }
-        #q4 .q-title { background-color: #f2f2f2; }
 
+        /* 象限底色与标题底色 */
+        #q1 { background: var(--q1-bg); }
+        #q1 .q-title { background-color: var(--q1-title); color: #800000; }
+        #q2 { background: var(--q2-bg); }
+        #q2 .q-title { background-color: var(--q2-title); color: #003366; }
+        #q3 { background: var(--q3-bg); }
+        #q3 .q-title { background-color: var(--q3-title); color: #663300; }
+        #q4 { background: var(--q4-bg); }
+        #q4 .q-title { background-color: var(--q4-title); color: #333; }
+
+        /* ==============================
+           5. 任务卡片样式 (圆角阴影浮雕)
+           ============================== */
         .task-list {
             flex-grow: 1;
-            min-height: 100px;
+            min-height: 80px;
+            overflow-y: auto; /* 象限内部任务过多时允许滚动 */
+            padding-right: 5px;
         }
+        
+        /* 自定义滚动条样式 */
+        .task-list::-webkit-scrollbar { width: 4px; }
+        .task-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
         .task-item {
-            background: white;
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 12px;
             margin-bottom: 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.03);
             cursor: grab;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-card);
+            transition: all 0.2s ease-in-out;
+            opacity: 1;
+            position: relative;
         }
-        .task-item:active {
-            cursor: grabbing;
+        
+        /* 鼠标悬浮和按下时的视觉反馈 */
+        .task-item:hover {
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+            background: white;
         }
+        .task-item:active { cursor: grabbing; opacity: 0.8; }
+        
+        /* 被拖拽时的基础样式，防止浏览器默认样式破坏布局 */
+        .task-item.dragging {
+            border: 2px dashed #999;
+            background-color: transparent;
+            box-shadow: none;
+        }
+
         .task-text {
             flex-grow: 1;
             word-break: break-all;
+            font-size: 14px;
+            padding-right: 15px;
         }
+        
+        /* 完成状态的划线和变灰 */
         .completed .task-text {
             text-decoration: line-through;
-            color: #888;
+            color: #aaa;
         }
+        
+        /* 隐藏的删除按钮 */
         .delete-btn {
             color: #ff4d4f;
             cursor: pointer;
             padding: 0 5px;
             font-weight: bold;
             display: none;
+            transition: color 0.2s;
+            position: absolute;
+            right: 8px;
         }
-        .task-item:hover .delete-btn {
-            display: block;
-        }
+        .delete-btn:hover { color: #cf1322; }
+        
+        /* PC端悬浮显示删除，移动端点击显示删除 */
+        .task-item:hover .delete-btn { display: block; }
+
     </style>
 </head>
 <body>
 
-<div class="matrix-container">
+<header>
+    <h1>轻重缓急四象限</h1>
+    <p class="intro">手机/电脑自动适配数据不出本地隐私安全</p>
+</header>
+
+<div class="matrix-container" id="matrix">
     <div class="quadrant" id="q1" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q1', event)">
-        <div class="q-title">🔥 重要且紧急</div>
+        <div class="q-title"><span>🔥</span> 1 重要且紧急</div>
         <div class="task-list" id="list-q1"></div>
     </div>
     <div class="quadrant" id="q2" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q2', event)">
-        <div class="q-title">⭐ 重要但不紧急</div>
+        <div class="q-title"><span>⭐</span> 2 重要但不紧急</div>
         <div class="task-list" id="list-q2"></div>
     </div>
     <div class="quadrant" id="q3" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q3', event)">
-        <div class="q-title">⚡ 紧急但不重要</div>
+        <div class="q-title"><span>⚡</span> 3 紧急但不重要</div>
         <div class="task-list" id="list-q3"></div>
     </div>
     <div class="quadrant" id="q4" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q4', event)">
-        <div class="q-title">☕ 不重要且不紧急</div>
+        <div class="q-title"><span>☕</span> 4 不重要且不紧急</div>
         <div class="task-list" id="list-q4"></div>
     </div>
 </div>
@@ -141,7 +249,8 @@
             itemEl.draggable = true;
             
             // 绑定拖拽事件
-            itemEl.ondragstart = (e) => dragStart(e, quadrantId, index);
+            itemEl.ondragstart = (e) => dragStart(e, quadrantId, index, itemEl);
+            itemEl.ondragend = () => dragEnd(itemEl);
             
             // 任务文本区
             const textEl = document.createElement('span');
@@ -166,7 +275,7 @@
     // 交互逻辑：新增
     function addTask(quadrantId, event) {
         // 防止点在已有任务上触发新增
-        if (event.target.classList.contains('quadrant') || event.target.classList.contains('task-list')) {
+        if (event.target.classList.contains('quadrant') || event.target.classList.contains('task-list') || event.target.classList.contains('q-title')) {
             const text = prompt('请输入新任务:');
             if (text && text.trim()) {
                 tasks[quadrantId].push({ text: text.trim(), completed: false });
@@ -195,15 +304,23 @@
 
     // 交互逻辑：删除
     function deleteTask(quadrantId, index) {
-        tasks[quadrantId].splice(index, 1);
-        saveData();
-        renderQuadrant(quadrantId);
+        if(confirm('确定要删除这条任务吗？')){
+            tasks[quadrantId].splice(index, 1);
+            saveData();
+            renderQuadrant(quadrantId);
+        }
     }
 
     // 拖拽逻辑
-    function dragStart(event, quadrantId, index) {
+    function dragStart(event, quadrantId, index, el) {
         draggedItemInfo = { quadrantId, index };
+        el.classList.add('dragging'); // 增加特殊样式，防止浏览器卡顿
         event.dataTransfer.effectAllowed = 'move';
+    }
+    
+    function dragEnd(el) {
+        el.classList.remove('dragging');
+        draggedItemInfo = null;
     }
 
     function allowDrop(event) {
@@ -226,11 +343,9 @@
                 const taskToMove = tasks[fromQuadrantId].splice(fromIndex, 1)[0];
                 tasks[toQuadrantId].push(taskToMove);
                 saveData();
-                renderQuadrant(fromQuadrantId);
-                renderQuadrant(toQuadrantId);
+                renderAll(); // 拖拽完成后全量渲染，保持同步
             }
         }
-        draggedItemInfo = null;
     }
 
     // 启动应用
