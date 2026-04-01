@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>轻重缓急四象限 - 高效时间管理工具</title>
     <style>
-        /* ==============================
-           1. 全局样式与变量
-           ============================== */
         :root {
             --q1-bg: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
             --q1-title: #ffcccc;
@@ -34,9 +31,6 @@
             flex-direction: column;
         }
 
-        /* ==============================
-           2. 顶部标题与说明
-           ============================== */
         header {
             text-align: center;
             padding: 15px 10px;
@@ -47,19 +41,15 @@
         h1 { margin: 0; font-size: 22px; color: #1a1a1a; }
         .intro { margin: 5px 0 0; font-size: 13px; color: var(--text-sub); }
 
-        /* ==============================
-           3. 四象限容器 (实现响应式的核心)
-           ============================== */
         .matrix-container {
             flex-grow: 1;
             padding: 15px;
             box-sizing: border-box;
             display: grid;
             gap: 15px;
-            overflow: hidden; /* 防止整体滚动 */
+            overflow: hidden;
         }
 
-        /* PC端/横屏手机：2列 2行 */
         @media (min-width: 600px) {
             .matrix-container {
                 grid-template-columns: 1fr 1fr;
@@ -67,18 +57,14 @@
             }
         }
 
-        /* 手机竖屏：1列 4行 */
         @media (max-width: 599px) {
             .matrix-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: repeat(4, 1fr);
-                overflow-y: auto; /* 手机竖屏允许整页上下滚动 */
+                overflow-y: auto;
             }
         }
 
-        /* ==============================
-           4. 象限模块样式 (渐变与圆角)
-           ============================== */
         .quadrant {
             border-radius: 12px;
             padding: 12px;
@@ -86,7 +72,7 @@
             flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.03);
-            cursor: copy; /* 提示可以双击新增 */
+            cursor: copy; /* 提示单击可以新增 */
         }
 
         .q-title {
@@ -100,9 +86,9 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            cursor: default;
         }
 
-        /* 象限底色与标题底色 */
         #q1 { background: var(--q1-bg); }
         #q1 .q-title { background-color: var(--q1-title); color: #800000; }
         #q2 { background: var(--q2-bg); }
@@ -112,17 +98,13 @@
         #q4 { background: var(--q4-bg); }
         #q4 .q-title { background-color: var(--q4-title); color: #333; }
 
-        /* ==============================
-           5. 任务卡片样式 (圆角阴影浮雕)
-           ============================== */
         .task-list {
             flex-grow: 1;
             min-height: 80px;
-            overflow-y: auto; /* 象限内部任务过多时允许滚动 */
+            overflow-y: auto;
             padding-right: 5px;
         }
         
-        /* 自定义滚动条样式 */
         .task-list::-webkit-scrollbar { width: 4px; }
         .task-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
@@ -137,53 +119,63 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: var(--shadow-card);
-            transition: all 0.2s ease-in-out;
-            opacity: 1;
+            transition: transform 0.1s ease, box-shadow 0.2s;
             position: relative;
         }
         
-        /* 鼠标悬浮和按下时的视觉反馈 */
         .task-item:hover {
             box-shadow: var(--shadow-card-hover);
             transform: translateY(-2px);
             background: white;
         }
-        .task-item:active { cursor: grabbing; opacity: 0.8; }
+        .task-item:active { cursor: grabbing; }
         
-        /* 被拖拽时的基础样式，防止浏览器默认样式破坏布局 */
         .task-item.dragging {
-            border: 2px dashed #999;
-            background-color: transparent;
-            box-shadow: none;
+            opacity: 0.5;
+            background-color: #f9f9f9;
         }
+
+        /* 排序占位视觉反馈 */
+        .task-item.drag-over-top {
+            border-top: 3px solid #1890ff;
+        }
+        .task-item.drag-over-bottom {
+            border-bottom: 3px solid #1890ff;
+        }
+
+        /* 勾选框样式 */
+        .check-box {
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #ccc;
+            transition: color 0.2s;
+        }
+        .completed .check-box { color: #52c41a; }
 
         .task-text {
             flex-grow: 1;
             word-break: break-all;
             font-size: 14px;
             padding-right: 15px;
+            cursor: text; /* 提示单击可以编辑 */
         }
         
-        /* 完成状态的划线和变灰 */
         .completed .task-text {
             text-decoration: line-through;
             color: #aaa;
         }
         
-        /* 隐藏的删除按钮 */
         .delete-btn {
             color: #ff4d4f;
             cursor: pointer;
             padding: 0 5px;
             font-weight: bold;
             display: none;
-            transition: color 0.2s;
             position: absolute;
             right: 8px;
         }
         .delete-btn:hover { color: #cf1322; }
-        
-        /* PC端悬浮显示删除，移动端点击显示删除 */
         .task-item:hover .delete-btn { display: block; }
 
     </style>
@@ -192,34 +184,32 @@
 
 <header>
     <h1>轻重缓急四象限</h1>
-    <p class="intro">手机/电脑自动适配数据不出本地隐私安全</p>
+    <p class="intro">点击空白新增 | 点击文字编辑 | 拖拽卡片排序</p>
 </header>
 
 <div class="matrix-container" id="matrix">
-    <div class="quadrant" id="q1" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q1', event)">
+    <div class="quadrant" id="q1" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="addTask('q1', event)">
         <div class="q-title"><span>🔥</span> 1 重要且紧急</div>
         <div class="task-list" id="list-q1"></div>
     </div>
-    <div class="quadrant" id="q2" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q2', event)">
+    <div class="quadrant" id="q2" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="addTask('q2', event)">
         <div class="q-title"><span>⭐</span> 2 重要但不紧急</div>
         <div class="task-list" id="list-q2"></div>
     </div>
-    <div class="quadrant" id="q3" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q3', event)">
+    <div class="quadrant" id="q3" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="addTask('q3', event)">
         <div class="q-title"><span>⚡</span> 3 紧急但不重要</div>
         <div class="task-list" id="list-q3"></div>
     </div>
-    <div class="quadrant" id="q4" ondrop="drop(event)" ondragover="allowDrop(event)" ondblclick="addTask('q4', event)">
+    <div class="quadrant" id="q4" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="addTask('q4', event)">
         <div class="q-title"><span>☕</span> 4 不重要且不紧急</div>
         <div class="task-list" id="list-q4"></div>
     </div>
 </div>
 
 <script>
-    // 核心数据结构
     let tasks = { q1: [], q2: [], q3: [], q4: [] };
     let draggedItemInfo = null;
 
-    // 初始化加载数据
     function loadData() {
         const saved = localStorage.getItem('eisenhower_tasks');
         if (saved) {
@@ -228,17 +218,14 @@
         renderAll();
     }
 
-    // 保存数据到浏览器本地缓存
     function saveData() {
         localStorage.setItem('eisenhower_tasks', JSON.stringify(tasks));
     }
 
-    // 渲染所有象限
     function renderAll() {
         ['q1', 'q2', 'q3', 'q4'].forEach(renderQuadrant);
     }
 
-    // 渲染单个象限
     function renderQuadrant(quadrantId) {
         const listEl = document.getElementById('list-' + quadrantId);
         listEl.innerHTML = '';
@@ -247,35 +234,42 @@
             const itemEl = document.createElement('div');
             itemEl.className = 'task-item' + (task.completed ? ' completed' : '');
             itemEl.draggable = true;
+            itemEl.dataset.index = index;
+            itemEl.dataset.quadrant = quadrantId;
             
-            // 绑定拖拽事件
+            // 绑定拖拽事件 (支持同象限排序)
             itemEl.ondragstart = (e) => dragStart(e, quadrantId, index, itemEl);
+            itemEl.ondragover = (e) => handleDragOver(e, itemEl);
+            itemEl.ondragleave = () => clearDragStyles(itemEl);
             itemEl.ondragend = () => dragEnd(itemEl);
             
-            // 任务文本区
+            // 独立勾选框：单击切换完成状态
+            const checkEl = document.createElement('span');
+            checkEl.className = 'check-box';
+            checkEl.innerHTML = task.completed ? '●' : '○';
+            checkEl.onclick = (e) => { e.stopPropagation(); toggleTask(quadrantId, index); };
+
+            // 文本区：单击编辑
             const textEl = document.createElement('span');
             textEl.className = 'task-text';
             textEl.innerText = task.text;
-            // 网页端更符合直觉的交互：单击切换完成状态，双击编辑
-            textEl.onclick = (e) => { e.stopPropagation(); toggleTask(quadrantId, index); };
-            textEl.ondblclick = (e) => { e.stopPropagation(); editTask(quadrantId, index); };
+            textEl.onclick = (e) => { e.stopPropagation(); editTask(quadrantId, index); };
             
-            // 删除按钮
             const delBtn = document.createElement('span');
             delBtn.className = 'delete-btn';
             delBtn.innerText = '×';
             delBtn.onclick = (e) => { e.stopPropagation(); deleteTask(quadrantId, index); };
 
+            itemEl.appendChild(checkEl);
             itemEl.appendChild(textEl);
             itemEl.appendChild(delBtn);
             listEl.appendChild(itemEl);
         });
     }
 
-    // 交互逻辑：新增
     function addTask(quadrantId, event) {
-        // 防止点在已有任务上触发新增
-        if (event.target.classList.contains('quadrant') || event.target.classList.contains('task-list') || event.target.classList.contains('q-title')) {
+        // 只有点在象限背景或列表空白处，才触发新增
+        if (event.target.classList.contains('quadrant') || event.target.classList.contains('task-list')) {
             const text = prompt('请输入新任务:');
             if (text && text.trim()) {
                 tasks[quadrantId].push({ text: text.trim(), completed: false });
@@ -285,7 +279,6 @@
         }
     }
 
-    // 交互逻辑：编辑
     function editTask(quadrantId, index) {
         const newText = prompt('修改任务:', tasks[quadrantId][index].text);
         if (newText && newText.trim()) {
@@ -295,14 +288,12 @@
         }
     }
 
-    // 交互逻辑：切换完成状态
     function toggleTask(quadrantId, index) {
         tasks[quadrantId][index].completed = !tasks[quadrantId][index].completed;
         saveData();
         renderQuadrant(quadrantId);
     }
 
-    // 交互逻辑：删除
     function deleteTask(quadrantId, index) {
         if(confirm('确定要删除这条任务吗？')){
             tasks[quadrantId].splice(index, 1);
@@ -311,44 +302,82 @@
         }
     }
 
-    // 拖拽逻辑
+    // --- 拖拽与排序核心逻辑 ---
     function dragStart(event, quadrantId, index, el) {
         draggedItemInfo = { quadrantId, index };
-        el.classList.add('dragging'); // 增加特殊样式，防止浏览器卡顿
+        setTimeout(() => el.classList.add('dragging'), 0);
         event.dataTransfer.effectAllowed = 'move';
     }
     
+    function handleDragOver(e, el) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 计算鼠标相对于卡片的位置
+        const rect = el.getBoundingClientRect();
+        const midPoint = rect.top + rect.height / 2;
+        
+        clearDragStyles(el);
+        if (e.clientY < midPoint) {
+            el.classList.add('drag-over-top');
+        } else {
+            el.classList.add('drag-over-bottom');
+        }
+    }
+
+    function clearDragStyles(el) {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+    }
+
     function dragEnd(el) {
         el.classList.remove('dragging');
+        clearDragStyles(el);
         draggedItemInfo = null;
     }
 
     function allowDrop(event) {
-        event.preventDefault(); // 必须阻止默认行为才能允许放置
+        event.preventDefault();
     }
 
     function drop(event) {
         event.preventDefault();
-        // 找到目标象限的 ID
-        let target = event.target;
-        while (!target.classList.contains('quadrant') && target.parentElement) {
-            target = target.parentElement;
-        }
-        const toQuadrantId = target.id;
+        
+        if (!draggedItemInfo) return;
 
-        if (draggedItemInfo && toQuadrantId && ['q1', 'q2', 'q3', 'q4'].includes(toQuadrantId)) {
-            const { quadrantId: fromQuadrantId, index: fromIndex } = draggedItemInfo;
-            if (fromQuadrantId !== toQuadrantId) {
-                // 移动数据
-                const taskToMove = tasks[fromQuadrantId].splice(fromIndex, 1)[0];
-                tasks[toQuadrantId].push(taskToMove);
-                saveData();
-                renderAll(); // 拖拽完成后全量渲染，保持同步
+        // 获取落点象限
+        let targetQuadrant = event.target.closest('.quadrant');
+        if (!targetQuadrant) return;
+        const toQuadrantId = targetQuadrant.id;
+
+        // 获取落点具体的卡片（如果有）
+        let targetItem = event.target.closest('.task-item');
+        
+        const { quadrantId: fromQuadrantId, index: fromIndex } = draggedItemInfo;
+        
+        // 提取被拖拽的数据
+        const taskToMove = tasks[fromQuadrantId].splice(fromIndex, 1)[0];
+        
+        let insertIndex = tasks[toQuadrantId].length; // 默认插到底部
+
+        if (targetItem) {
+            const rect = targetItem.getBoundingClientRect();
+            const midPoint = rect.top + rect.height / 2;
+            const targetIndex = parseInt(targetItem.dataset.index);
+            
+            // 判断插在目标卡片的上方还是下方
+            insertIndex = event.clientY < midPoint ? targetIndex : targetIndex + 1;
+            
+            // 同象限内部排序的索引偏移修正
+            if (fromQuadrantId === toQuadrantId && fromIndex < targetIndex && event.clientY >= midPoint) {
+                insertIndex--;
             }
         }
+
+        tasks[toQuadrantId].splice(insertIndex, 0, taskToMove);
+        saveData();
+        renderAll();
     }
 
-    // 启动应用
     loadData();
 </script>
 
